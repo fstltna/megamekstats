@@ -13,6 +13,9 @@ my $DEBUGMODE = "";
 my $EDITOR = "/usr/bin/nano";
 my $OutputFile = "";
 
+print "listusers - Lists Users Logged Into MegaMek v$Version\n";
+print "======================================================\n";
+
 sub DebugPrint
 {
         my $argument = shift;
@@ -119,6 +122,13 @@ close(FILEIN);
 
 open(FILEOUT, '>', $OutputFile) or die $!;
 #print FILEOUT "$defaultfile";
+
+my $IsRunning = `pgrep $ProcessName`;
+if ($IsRunning eq "")
+{
+	print "Process $ProcessName is not running\n";
+	exit 0;
+}
 
 my $PSCommand = "ps -p \$(pidof $ProcessName) -o etime=";
 my $ProcTime = `$PSCommand`;
