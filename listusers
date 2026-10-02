@@ -143,10 +143,10 @@ my $OutputTop = <<"END_MESSAGE";
 </head>
 <body>
 	<h2 align=center>The $ServerName MegaMek server</h2>
-	<p>MegaMek has been up for $ProcTime</p>
+	<p>MegaMek has been up for <span style="color: green;">$ProcTime</span></p>
 	<p>User Sessions:</p>
 	<table border=2>
-	<tr><th width=50%>User IP</th><th width=50%>Some Data</th></tr>
+	<tr><th width=50%>User IP</th><th width=50%>Port</th></tr>
 END_MESSAGE
 
 print FILEOUT "$OutputTop\n";
@@ -165,7 +165,10 @@ while (my $line = <$fh>)
 		$NumUsers++;
 		#print $line;
 		(my $foo1,my $foo2,my $foo3,my $foo4,my $UserIP,my $foo5) = split(' ',$line);
-		print FILEOUT "<tr><td>$UserIP</td><td>Some Data</td></tr>\n";
+		my $DotPos = rindex($UserIP, ":");
+		my $PlainIP = substr($UserIP, 0, $DotPos);
+		my $RemotePort = substr($UserIP, $DotPos + 1);
+		print FILEOUT "<tr><td><span style=\"color: green;\">$PlainIP</span></td><td>$RemotePort</td></tr>\n";
 	}
 }
 
@@ -173,7 +176,7 @@ close($fh);
 
 my $OutputBottom = <<"END_MESSAGE";
 	</table>
-	<p>Saw $NumUsers online player(s)</p>
+	<p>Saw <span style="color: red;">$NumUsers</span> online player(s)</p>
 </body>
 </html>
 END_MESSAGE
