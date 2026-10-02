@@ -163,6 +163,15 @@ if ($RawFreeSpace < 300000)
 	$SpaceStatus = "red";
 }
 
+my $free_ram = `free -m | awk '/^Mem:/{print \$4}'`;
+chop($free_ram);
+my $RamStatus = "green";
+#print "Free Memory: $free_ram MB\n";
+if ($free_ram < 24)
+{
+	$RamStatus = "red";
+}
+
 my $OutputTop = <<"END_MESSAGE";
 <html>
 <head>
@@ -171,7 +180,7 @@ my $OutputTop = <<"END_MESSAGE";
 </head>
 <body>
 	<h2 align=center>The $ServerName MegaMek server</h2>
-	<p>MegaMek has been up for <span style="color: green;">$ProcTime</span>, System has been <span style="color: green;">$Uptime</span>, Free Space: <span style="color: $SpaceStatus;">$FreeSpace</span></p>
+	<p align=center>MegaMek has been up for <span style="color: green;">$ProcTime</span>, System has been <span style="color: green;">$Uptime</span>, Free Space: <span style="color: $SpaceStatus;">$FreeSpace</span>, Free Memory: <span style="color: $RamStatus;">$free_ram MB</span></p>
 	<p>User Sessions:</p>
 	<table border=2>
 	<tr><th width=250>User IP</th><th width=63>Port</th></tr>
