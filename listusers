@@ -231,7 +231,7 @@ END_MESSAGE
 print FILEOUT "$OutputBottom\n";
 print FILEOUT "<hr>\n";
 my $current_time = localtime();
-print FILEOUT "Last Updated at: $current_time\n";
+print FILEOUT "<b>Last Updated at: $current_time</b>\n";
 close(FILEOUT);
 exit 0;
 
