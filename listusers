@@ -12,6 +12,92 @@ my $ProcTime = `$PSCommand`;
 $ProcTime =~ s/^\s+//; # Removes leading whitespace
 $ProcTime =~ s/\s+$//; # Removes trailing whitespace
 my $Version = "1.0.0";
+my $PrefsFilename = "$ENV{HOME}/.listusersrc";
+my $DEBUGMODE = "";
+my $EDITOR = "/usr/bin/nano";
+
+sub DebugPrint
+{
+        my $argument = shift;
+        if ($DEBUGMODE)
+        {
+                print $argument;
+        }
+}
+
+my $defaultfile = <<'END_TEMPLATE';
+# Put Server name here:
+This is our Megamek server
+# Put default port here
+2346
+# Refresh rate
+65
+# Process to check
+java
+# Editor to use
+/usr/bin/nano
+# Get more apps like this at https://marisa-apps.retro-os.live
+END_TEMPLATE
+
+if (! -f $PrefsFilename)
+{
+	print "Settings file $PrefsFilename not found, creating it...\n";
+	open(FILEOUT, '>', $PrefsFilename) or die $!;
+	# print FILEOUT "$defaultfile\n";
+	print FILEOUT "$defaultfile";
+	close(FILEOUT);
+	system("$EDITOR $PrefsFilename");
+	print "Prefs modified - rerun this script\n";
+	exit 0;
+}
+
+open(FILEIN, '<', $PrefsFilename) or die $!;
+my $LastLine = 0;
+while(<FILEIN>)
+{
+	# print $_;
+	if ((substr($_, 0, 1) eq "#") || ($_ eq ""))
+	{
+		# skip over comments and blank lines
+		next;
+	}
+	chop();
+	if ($LastLine == 0)
+	{
+		$ServerName = $_;
+		$LastLine++;
+		DebugPrint("saw server name '$ServerName'\n");
+		next;
+	}
+	elsif ($LastLine == 1)
+	{
+		$PORT = $_;
+		DebugPrint("saw port '$PORT'\n");
+		$LastLine++;
+	}
+	elsif ($LastLine == 2)
+	{
+		$RefreshRate = $_;
+		$LastLine++;
+		DebugPrint("saw refreshrate '$RefreshRate'\n");
+		next;
+	}
+	elsif ($LastLine == 3)
+	{
+		$ProcessName = $_;
+		$LastLine++;
+		DebugPrint("saw processname '$ProcessName'\n");
+		next;
+	}
+	elsif ($LastLine == 4)
+	{
+		$EDITOR = $_;
+		$LastLine++;
+		DebugPrint("saw editor '$EDITOR'\n");
+		next;
+	}
+}
+close(FILEIN);
 
 my $OutputTop = <<"END_MESSAGE";
 <html>
@@ -42,7 +128,7 @@ while (my $line = <$fh>)
 	{
 		$NumUsers++;
 		#print $line;
-		(my $foo1,my $foo2,my $foo3,my $foo4,my $UserIP,my $foo4) = split(' ',$line);
+		(my $foo1,my $foo2,my $foo3,my $foo4,my $UserIP,my $foo5) = split(' ',$line);
 		print "<tr><td>>$UserIP</td><td>Some Data</td></tr>\n";
 	}
 }
