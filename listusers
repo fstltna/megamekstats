@@ -6,11 +6,12 @@ my $PORT = 2346;
 my $ServerName ="";
 my $NumUsers = 0;
 my $RefreshRate = 65;
-my $ProcessName = "gtkhx";
+my $ProcessName = "java";
 my $PSCommand = "ps -p \$(pidof $ProcessName) -o etime=";
 my $ProcTime = `$PSCommand`;
 $ProcTime =~ s/^\s+//; # Removes leading whitespace
 $ProcTime =~ s/\s+$//; # Removes trailing whitespace
+my $Version = "1.0.0";
 
 my $OutputTop = <<"END_MESSAGE";
 <html>
@@ -26,19 +27,9 @@ my $OutputTop = <<"END_MESSAGE";
 	<tr><th width=50%>User IP</th><th width=50%>Some Data</th></tr>
 END_MESSAGE
 
-my $OutputBottom = <<"END_MESSAGE";
-	</table>
-	<p>Saw $NumUsers online</p>
-</body>
-</html>
-END_MESSAGE
-
 print "$OutputTop\n";
-print "$OutputBottom\n";
 
-## Run netstat and read its output
-## Change "-an" if you need a different netstat format.
-my $cmd = "netstat -an";
+my $cmd = "netstat -an | grep ESTABLISHED";
 open(my $fh, "-|", $cmd) or die "Failed to run '$cmd': $!";
 
 while (my $line = <$fh>)
@@ -50,13 +41,21 @@ while (my $line = <$fh>)
 	if ($line =~ /:\Q$PORT\E\b/)
 	{
 		$NumUsers++;
-		print $line;
-		my $UserIP = $line;
+		#print $line;
+		(my $foo1,my $foo2,my $foo3,my $foo4,my $UserIP,my $foo4) = split(' ',$line);
 		print "<tr><td>>$UserIP</td><td>Some Data</td></tr>\n";
 	}
 }
 
 close($fh);
 
+my $OutputBottom = <<"END_MESSAGE";
+	</table>
+	<p>Saw $NumUsers online player(s)</p>
+</body>
+</html>
+END_MESSAGE
+
+print "$OutputBottom\n";
 exit 0;
 
