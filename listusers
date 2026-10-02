@@ -7,19 +7,16 @@ my $ServerName ="";
 my $NumUsers = 0;
 my $RefreshRate = 65;
 my $ProcessName = "java";
-my $PSCommand = "ps -p \$(pidof $ProcessName) -o etime=";
-my $ProcTime = `$PSCommand`;
-$ProcTime =~ s/^\s+//; # Removes leading whitespace
-$ProcTime =~ s/\s+$//; # Removes trailing whitespace
 my $Version = "1.0.0";
 my $PrefsFilename = "$ENV{HOME}/.listusersrc";
 my $DEBUGMODE = "";
 my $EDITOR = "/usr/bin/nano";
+my $OutputFile = "";
 
 sub DebugPrint
 {
         my $argument = shift;
-        if ($DEBUGMODE)
+        if ($DEBUGMODE ne "")
         {
                 print $argument;
         }
@@ -36,9 +33,28 @@ This is our Megamek server
 java
 # Editor to use
 /usr/bin/nano
+# Output file
+/var/www/html/MM_Stats.html
 # Get more apps like this at https://marisa-apps.retro-os.live
 END_TEMPLATE
 
+my $num_args = $#ARGV + 1;
+if ($num_args != 0)
+{
+        if ($ARGV[0] eq "prefs")
+        {
+                system("$EDITOR $PrefsFilename");
+                exit 0;
+        }
+        elsif ($ARGV[0] eq "debug")
+        {
+		$DEBUGMODE = "debug";
+        }
+	else
+	{
+		print "Invalid option - only options are \"prefs\" and \"debug\".\n";
+	}
+}
 if (! -f $PrefsFilename)
 {
 	print "Settings file $PrefsFilename not found, creating it...\n";
@@ -67,7 +83,6 @@ while(<FILEIN>)
 		$ServerName = $_;
 		$LastLine++;
 		DebugPrint("saw server name '$ServerName'\n");
-		next;
 	}
 	elsif ($LastLine == 1)
 	{
@@ -80,24 +95,35 @@ while(<FILEIN>)
 		$RefreshRate = $_;
 		$LastLine++;
 		DebugPrint("saw refreshrate '$RefreshRate'\n");
-		next;
 	}
 	elsif ($LastLine == 3)
 	{
 		$ProcessName = $_;
 		$LastLine++;
 		DebugPrint("saw processname '$ProcessName'\n");
-		next;
 	}
 	elsif ($LastLine == 4)
 	{
 		$EDITOR = $_;
 		$LastLine++;
 		DebugPrint("saw editor '$EDITOR'\n");
-		next;
+	}
+	elsif ($LastLine == 5)
+	{
+		$OutputFile = $_;
+		$LastLine++;
+		DebugPrint("saw outputfile '$OutputFile'\n");
 	}
 }
 close(FILEIN);
+
+open(FILEOUT, '>', $OutputFile) or die $!;
+#print FILEOUT "$defaultfile";
+
+my $PSCommand = "ps -p \$(pidof $ProcessName) -o etime=";
+my $ProcTime = `$PSCommand`;
+$ProcTime =~ s/^\s+//; # Removes leading whitespace
+$ProcTime =~ s/\s+$//; # Removes trailing whitespace
 
 my $OutputTop = <<"END_MESSAGE";
 <html>
@@ -113,7 +139,7 @@ my $OutputTop = <<"END_MESSAGE";
 	<tr><th width=50%>User IP</th><th width=50%>Some Data</th></tr>
 END_MESSAGE
 
-print "$OutputTop\n";
+print FILEOUT "$OutputTop\n";
 
 my $cmd = "netstat -an | grep ESTABLISHED";
 open(my $fh, "-|", $cmd) or die "Failed to run '$cmd': $!";
@@ -129,7 +155,7 @@ while (my $line = <$fh>)
 		$NumUsers++;
 		#print $line;
 		(my $foo1,my $foo2,my $foo3,my $foo4,my $UserIP,my $foo5) = split(' ',$line);
-		print "<tr><td>>$UserIP</td><td>Some Data</td></tr>\n";
+		print FILEOUT "<tr><td>>$UserIP</td><td>Some Data</td></tr>\n";
 	}
 }
 
@@ -142,6 +168,7 @@ my $OutputBottom = <<"END_MESSAGE";
 </html>
 END_MESSAGE
 
-print "$OutputBottom\n";
+print FILEOUT "$OutputBottom\n";
+close(FILEOUT);
 exit 0;
 
