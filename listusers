@@ -15,6 +15,7 @@ my $EDITOR = "/usr/bin/nano";
 my $OutputFile = "";
 my $ref = dfportable("/", 1024);
 my $SpaceStatus = "green";
+my $SupportLink = "";
 
 print "listusers - Lists Users Logged Into MegaMek v$Version\n";
 print "======================================================\n";
@@ -58,6 +59,8 @@ java
 /usr/bin/nano
 # Output file
 /var/www/html/MM_Stats.html
+# Support Link
+https://megamekfans.gameplayer.club
 # Get more apps like this at https://marisa-apps.retro-os.live
 END_TEMPLATE
 
@@ -137,6 +140,12 @@ while(<FILEIN>)
 		$LastLine++;
 		DebugPrint("saw outputfile '$OutputFile'\n");
 	}
+	elsif ($LastLine == 6)
+	{
+		$SupportLink = $_;
+		$LastLine++;
+		DebugPrint("saw supportlink '$SupportLink'\n");
+	}
 }
 close(FILEIN);
 
@@ -214,6 +223,7 @@ close($fh);
 my $OutputBottom = <<"END_MESSAGE";
 	</table>
 	<p>Saw <span style="color: red;">$NumUsers</span> online player(s)</p>
+	<p>Get support <a href=\"$SupportLink\">here</a></p>
 </body>
 </html>
 END_MESSAGE
