@@ -27,10 +27,10 @@ sub DebugPrint
 
 my $defaultfile = <<'END_TEMPLATE';
 # Put Server name here:
-This is our Megamek server
-# Put default port here
+Test MegaMek
+# Put port here
 2346
-# Refresh rate
+# Refresh rate - How often the webpage will get reloaded.
 65
 # Process to check
 java
