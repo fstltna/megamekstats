@@ -1,6 +1,7 @@
 #!/usr/bin/perl
 use strict;
 use warnings;
+use Filesys::DfPortable;
 
 my $PORT = 2346;
 my $ServerName ="";
@@ -12,9 +13,11 @@ my $PrefsFilename = "$ENV{HOME}/.listusersrc";
 my $DEBUGMODE = "";
 my $EDITOR = "/usr/bin/nano";
 my $OutputFile = "";
+my $ref = dfportable("/", 1024);
 
 print "listusers - Lists Users Logged Into MegaMek v$Version\n";
 print "======================================================\n";
+print "Available space to user: $ref->{bavail} KB\n";
 
 sub DebugPrint
 {
@@ -135,6 +138,7 @@ my $ProcTime = `$PSCommand`;
 $ProcTime =~ s/^\s+//; # Removes leading whitespace
 $ProcTime =~ s/\s+$//; # Removes trailing whitespace
 
+my $Uptime = `uptime -p`;
 my $OutputTop = <<"END_MESSAGE";
 <html>
 <head>
@@ -143,7 +147,7 @@ my $OutputTop = <<"END_MESSAGE";
 </head>
 <body>
 	<h2 align=center>The $ServerName MegaMek server</h2>
-	<p>MegaMek has been up for <span style="color: green;">$ProcTime</span></p>
+	<p>MegaMek has been up for <span style="color: green;">$ProcTime</span>, System has been <span style="color: green;">$Uptime</span>, $ref->{bavail} KB free space</p>
 	<p>User Sessions:</p>
 	<table border=2>
 	<tr><th width=250>User IP</th><th width=63>Port</th></tr>
