@@ -1,0 +1,62 @@
+#!/usr/bin/perl
+use strict;
+use warnings;
+
+my $PORT = 2346;
+my $ServerName ="";
+my $NumUsers = 0;
+my $RefreshRate = 65;
+my $ProcessName = "gtkhx";
+my $PSCommand = "ps -p \$(pidof $ProcessName) -o etime=";
+my $ProcTime = `$PSCommand`;
+$ProcTime =~ s/^\s+//; # Removes leading whitespace
+$ProcTime =~ s/\s+$//; # Removes trailing whitespace
+
+my $OutputTop = <<"END_MESSAGE";
+<html>
+<head>
+	<title>The $ServerName MegaMek server</title>
+	<meta http-equiv="refresh" content="$RefreshRate">
+</head>
+<body>
+	<h2 align=center>The $ServerName MegaMek server</h2>
+	<p>MegaMek has been up for $ProcTime</p>
+	<p>User Sessions:</p>
+	<table border=2>
+	<tr><th width=50%>User IP</th><th width=50%>Some Data</th></tr>
+END_MESSAGE
+
+my $OutputBottom = <<"END_MESSAGE";
+	</table>
+	<p>Saw $NumUsers online</p>
+</body>
+</html>
+END_MESSAGE
+
+print "$OutputTop\n";
+print "$OutputBottom\n";
+
+## Run netstat and read its output
+## Change "-an" if you need a different netstat format.
+my $cmd = "netstat -an";
+open(my $fh, "-|", $cmd) or die "Failed to run '$cmd': $!";
+
+while (my $line = <$fh>)
+{
+	next if $line =~ /^\s*$/;
+
+	# Match :2346 (IPv4/IPv6 variants) anywhere in the line,
+	# including cases like ":::2346" or "[::]:2346"
+	if ($line =~ /:\Q$PORT\E\b/)
+	{
+		$NumUsers++;
+		print $line;
+		my $UserIP = $line;
+		print "<tr><td>>$UserIP</td><td>Some Data</td></tr>\n";
+	}
+}
+
+close($fh);
+
+exit 0;
+
