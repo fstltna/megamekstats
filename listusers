@@ -165,7 +165,7 @@ while (my $line = <$fh>)
 		$NumUsers++;
 		#print $line;
 		(my $foo1,my $foo2,my $foo3,my $foo4,my $UserIP,my $foo5) = split(' ',$line);
-		print FILEOUT "<tr><td>>$UserIP</td><td>Some Data</td></tr>\n";
+		print FILEOUT "<tr><td>$UserIP</td><td>Some Data</td></tr>\n";
 	}
 }
 
