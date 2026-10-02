@@ -17,7 +17,6 @@ my $ref = dfportable("/", 1024);
 
 print "listusers - Lists Users Logged Into MegaMek v$Version\n";
 print "======================================================\n";
-print "Available space to user: $ref->{bavail} KB\n";
 
 sub DebugPrint
 {
@@ -26,6 +25,23 @@ sub DebugPrint
         {
                 print $argument;
         }
+}
+
+sub pretty_print_kb
+{
+	my $kb = shift;
+	my @units = ('KB', 'MB', 'GB', 'TB', 'PB');
+	my $unit_idx = 0;
+
+	# Since input is in KB, scale up if >= 1024 KB
+	#while ($kb >= 1024 && $unit_idx < $@units - 1)
+	while ($kb >= 1024 && $unit_idx < @units - 1)
+	{
+		$kb /= 1024;
+		$unit_idx++;
+	}
+
+	return sprintf("%.2f %s", $kb, $units[$unit_idx]);
 }
 
 my $defaultfile = <<'END_TEMPLATE';
@@ -139,6 +155,7 @@ $ProcTime =~ s/^\s+//; # Removes leading whitespace
 $ProcTime =~ s/\s+$//; # Removes trailing whitespace
 
 my $Uptime = `uptime -p`;
+my $FreeSpace = pretty_print_kb($ref->{bavail});
 my $OutputTop = <<"END_MESSAGE";
 <html>
 <head>
@@ -147,7 +164,7 @@ my $OutputTop = <<"END_MESSAGE";
 </head>
 <body>
 	<h2 align=center>The $ServerName MegaMek server</h2>
-	<p>MegaMek has been up for <span style="color: green;">$ProcTime</span>, System has been <span style="color: green;">$Uptime</span>, $ref->{bavail} KB free space</p>
+	<p>MegaMek has been up for <span style="color: green;">$ProcTime</span>, System has been <span style="color: green;">$Uptime</span>, Free Space: <span style="color: green;">$FreeSpace</span></p>
 	<p>User Sessions:</p>
 	<table border=2>
 	<tr><th width=250>User IP</th><th width=63>Port</th></tr>
