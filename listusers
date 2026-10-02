@@ -14,6 +14,7 @@ my $DEBUGMODE = "";
 my $EDITOR = "/usr/bin/nano";
 my $OutputFile = "";
 my $ref = dfportable("/", 1024);
+my $SpaceStatus = "green";
 
 print "listusers - Lists Users Logged Into MegaMek v$Version\n";
 print "======================================================\n";
@@ -156,6 +157,12 @@ $ProcTime =~ s/\s+$//; # Removes trailing whitespace
 
 my $Uptime = `uptime -p`;
 my $FreeSpace = pretty_print_kb($ref->{bavail});
+my $RawFreeSpace = $ref->{bavail};
+if ($RawFreeSpace < 300000)
+{
+	$SpaceStatus = "red";
+}
+
 my $OutputTop = <<"END_MESSAGE";
 <html>
 <head>
@@ -164,7 +171,7 @@ my $OutputTop = <<"END_MESSAGE";
 </head>
 <body>
 	<h2 align=center>The $ServerName MegaMek server</h2>
-	<p>MegaMek has been up for <span style="color: green;">$ProcTime</span>, System has been <span style="color: green;">$Uptime</span>, Free Space: <span style="color: green;">$FreeSpace</span></p>
+	<p>MegaMek has been up for <span style="color: green;">$ProcTime</span>, System has been <span style="color: green;">$Uptime</span>, Free Space: <span style="color: $SpaceStatus;">$FreeSpace</span></p>
 	<p>User Sessions:</p>
 	<table border=2>
 	<tr><th width=250>User IP</th><th width=63>Port</th></tr>
