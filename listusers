@@ -179,6 +179,9 @@ my $OutputBottom = <<"END_MESSAGE";
 END_MESSAGE
 
 print FILEOUT "$OutputBottom\n";
+print FILEOUT "<hr>\n";
+my $current_time = localtime();
+print FILEOUT "Last Updated at: $current_time\n";
 close(FILEOUT);
 exit 0;
 
