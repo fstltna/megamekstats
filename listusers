@@ -2,6 +2,7 @@
 use strict;
 use warnings;
 use Filesys::DfPortable;
+use Time::Piece;
 
 my $PORT = 2346;
 my $ServerName ="";
@@ -19,14 +20,18 @@ my $SupportLink = "";
 
 print "listusers - Lists Users Logged Into MegaMek v$Version\n";
 print "======================================================\n";
+# Ensure the script is run with root privileges to read /proc/PID/fd/
+if ($> != 0) {
+	die "Error: This script must be run as root (sudo) to inspect process file descriptors.\n";
+}
 
 sub DebugPrint
 {
-        my $argument = shift;
-        if ($DEBUGMODE ne "")
-        {
-                print $argument;
-        }
+	my $argument = shift;
+	if ($DEBUGMODE ne "")
+	{
+		print $argument;
+	}
 }
 
 sub pretty_print_kb
@@ -67,15 +72,15 @@ END_TEMPLATE
 my $num_args = $#ARGV + 1;
 if ($num_args != 0)
 {
-        if ($ARGV[0] eq "prefs")
-        {
-                system("$EDITOR $PrefsFilename");
-                exit 0;
-        }
-        elsif ($ARGV[0] eq "debug")
-        {
+	if ($ARGV[0] eq "prefs")
+	{
+		system("$EDITOR $PrefsFilename");
+		exit 0;
+	}
+	elsif ($ARGV[0] eq "debug")
+	{
 		$DEBUGMODE = "debug";
-        }
+	}
 	else
 	{
 		print "Invalid option - only options are \"prefs\" and \"debug\".\n";
@@ -150,7 +155,6 @@ while(<FILEIN>)
 close(FILEIN);
 
 open(FILEOUT, '>', $OutputFile) or die $!;
-#print FILEOUT "$defaultfile";
 
 my $IsRunning = `pgrep $ProcessName`;
 if ($IsRunning eq "")
@@ -197,27 +201,87 @@ END_MESSAGE
 
 print FILEOUT "$OutputTop\n";
 
-my $cmd = "netstat -an | grep ESTABLISHED";
-open(my $fh, "-|", $cmd) or die "Failed to run '$cmd': $!";
+# Subroutine to calculate human-readable duration strings
+sub calculate_duration
+{
+	my ($start_time) = @_;
+	my $now = time();
+	my $diff = $now - $start_time;
+
+	if ($diff < 0) { $diff = 0; }
+
+	my $days	= int($diff / 86400);
+	my $hours	= int(($diff % 86400) / 3600);
+	my $minutes	= int(($diff % 3600) / 60);
+	my $seconds	= $diff % 60;
+
+	my $duration_str = "";
+	if ($days > 0)		{ $duration_str .= "${days}d "; }
+	if ($hours > 0)		{ $duration_str .= "${hours}h "; }
+	if ($minutes > 0)	{ $duration_str .= "${minutes}m "; }
+	$duration_str .= "${seconds}s";
+
+	return $duration_str;
+}
+
+# Run 'ss' to get established TCP connections along with process details (-p)
+open(my $fh, "-|", "ss -tneump 2>/dev/null") or die "Failed to execute ss: $!";
 
 while (my $line = <$fh>)
 {
-	next if $line =~ /^\s*$/;
+	chomp($line);
+	next if $. == 1; # Skip headers
 
-	# Match :2346 (IPv4/IPv6 variants) anywhere in the line,
-	# including cases like ":::2346" or "[::]:2346"
-	if ($line =~ /:\Q$PORT\E\b/)
+	# Split columns based on whitespace
+	my @cols = split(/\s+/, $line);
+	next if @cols < 6;
+	my $IsDesired = index($cols[6], "java");
+	if ($IsDesired < 1)
 	{
-		$NumUsers++;
-		#print $line;
-		(my $foo1,my $foo2,my $foo3,my $foo4,my $UserIP,my $foo5) = split(' ',$line);
-		my $DotPos = rindex($UserIP, ":");
-		my $PlainIP = substr($UserIP, 0, $DotPos);
-		my $RemotePort = substr($UserIP, $DotPos + 1);
-		print FILEOUT "<tr><td align = center><span style=\"color: green;\">$PlainIP</span></td><td align = center>$RemotePort</td></tr>\n";
+		next;
+	}
+print "cols = @cols\n";
+	my $state = $cols[0];
+	my $local = $cols[4];
+	my $peer = $cols[5];
+print "peer = $peer\n";
+	$IsDesired = index($local, "$PORT");	# ZZZ
+	if ($IsDesired < 1)
+	{
+		next;
+	}
+
+	# Extract PID and FD from the users field, e.g., users:(("nginx",pid=1234,fd=5))
+	if ($line =~ /pid=(\d+),fd=(\d+)/)
+	{
+		my $pid = $1;
+		my $fd = $2;
+		print "pid = $pid\n";
+
+		my $fd_path = "/proc/$pid/stat";
+		if (-e $fd_path)
+		{
+			# Get the modification time (creation time of the socket FD link)
+			my $mtime = (stat($fd_path))[9];
+			print "mtime = $mtime\n";
+
+			if ($mtime)
+			{
+				#print "Saw mtime\n";
+				my $duration = calculate_duration($mtime);
+print "duration = $duration\n";
+				printf("%-21s %-21s %-8s %-15s %s\n", $local, $peer, $pid, $state, $duration);
+				$NumUsers++;
+				#print $line;
+				(my $foo1,my $foo2,my $foo3,my $foo4,my $UserIP,my $foo5) = split(' ',$line);
+				my $DotPos = rindex($UserIP, ":");
+				my $PlainIP = substr($UserIP, 0, $DotPos);
+				my $RemotePort = substr($UserIP, $DotPos + 1);
+				print FILEOUT "<tr><td align = center><span style=\"color: green;\">$PlainIP</span></td><td align = center>$duration</td></tr>\n";
+			}
+		}
 	}
 }
-
 close($fh);
 
 my $OutputBottom = <<"END_MESSAGE";
