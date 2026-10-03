@@ -196,7 +196,7 @@ my $OutputTop = <<"END_MESSAGE";
 	<p align=center>MegaMek has been up for <span style="color: green;">$ProcTime</span>, System has been <span style="color: green;">$Uptime</span>, Free Space: <span style="color: $SpaceStatus;">$FreeSpace</span>, Free Memory: <span style="color: $RamStatus;">$free_ram MB</span></p>
 	<p>User Sessions:</p>
 	<table border=2>
-	<tr><th width=250>User IP</th><th width=63>Port</th></tr>
+	<tr><th width=250>User IP</th><th width=250>Time Online</th></tr>
 END_MESSAGE
 
 print FILEOUT "$OutputTop\n";
@@ -240,11 +240,11 @@ while (my $line = <$fh>)
 	{
 		next;
 	}
-print "cols = @cols\n";
+	DebugPrint "cols = @cols\n";
 	my $state = $cols[0];
 	my $local = $cols[4];
 	my $peer = $cols[5];
-print "peer = $peer\n";
+	DebugPrint "peer = $peer\n";
 	$IsDesired = index($local, "$PORT");	# ZZZ
 	if ($IsDesired < 1)
 	{
@@ -256,27 +256,27 @@ print "peer = $peer\n";
 	{
 		my $pid = $1;
 		my $fd = $2;
-		print "pid = $pid\n";
+		DebugPrint "pid = $pid\n";
 
 		my $fd_path = "/proc/$pid/stat";
 		if (-e $fd_path)
 		{
 			# Get the modification time (creation time of the socket FD link)
 			my $mtime = (stat($fd_path))[9];
-			print "mtime = $mtime\n";
+			DebugPrint "mtime = $mtime\n";
 
 			if ($mtime)
 			{
-				#print "Saw mtime\n";
 				my $duration = calculate_duration($mtime);
-print "duration = $duration\n";
 				printf("%-21s %-21s %-8s %-15s %s\n", $local, $peer, $pid, $state, $duration);
 				$NumUsers++;
 				#print $line;
 				(my $foo1,my $foo2,my $foo3,my $foo4,my $UserIP,my $foo5) = split(' ',$line);
-				my $DotPos = rindex($UserIP, ":");
-				my $PlainIP = substr($UserIP, 0, $DotPos);
-				my $RemotePort = substr($UserIP, $DotPos + 1);
+				my $DotPos = rindex($peer, ":");
+				my $PlainIP = substr($peer, 0, $DotPos);
+				$PlainIP = substr($PlainIP, 1);
+				chop ($PlainIP);
+				my $RemotePort = substr($peer, $DotPos + 1);
 				print FILEOUT "<tr><td align = center><span style=\"color: green;\">$PlainIP</span></td><td align = center>$duration</td></tr>\n";
 			}
 		}
@@ -284,18 +284,18 @@ print "duration = $duration\n";
 }
 close($fh);
 
+my $current_time = localtime();
 my $OutputBottom = <<"END_MESSAGE";
 	</table>
 	<p>Saw <span style="color: red;">$NumUsers</span> online player(s)</p>
 	<p>Get support <a href=\"$SupportLink\">here</a></p>
+	<hr>
+	<b>Last Updated at: $current_time</b>
 </body>
 </html>
 END_MESSAGE
 
 print FILEOUT "$OutputBottom\n";
-print FILEOUT "<hr>\n";
-my $current_time = localtime();
-print FILEOUT "<b>Last Updated at: $current_time</b>\n";
 close(FILEOUT);
 exit 0;
 
