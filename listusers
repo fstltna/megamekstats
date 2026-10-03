@@ -268,7 +268,7 @@ while (my $line = <$fh>)
 			if ($mtime)
 			{
 				my $duration = calculate_duration($mtime);
-				printf("%-21s %-21s %-8s %-15s %s\n", $local, $peer, $pid, $state, $duration);
+				#printf("%-21s %-21s %-8s %-15s %s\n", $local, $peer, $pid, $state, $duration);
 				$NumUsers++;
 				#print $line;
 				(my $foo1,my $foo2,my $foo3,my $foo4,my $UserIP,my $foo5) = split(' ',$line);
