@@ -16,10 +16,12 @@ my $EDITOR = "/usr/bin/nano";
 my $OutputFile = "";
 my $ref = dfportable("/", 1024);
 my $SpaceStatus = "green";
+my $RamStatus = "green";
 my $SupportLink = "";
 
 print "listusers - Lists Users Logged Into MegaMek v$Version\n";
 print "======================================================\n";
+
 # Ensure the script is run with root privileges to read /proc/PID/fd/
 if ($> != 0) {
 	die "Error: This script must be run as root (sudo) to inspect process file descriptors.\n";
@@ -178,7 +180,6 @@ if ($RawFreeSpace < 300000)
 
 my $free_ram = `free -m | awk '/^Mem:/{print \$4}'`;
 chop($free_ram);
-my $RamStatus = "green";
 #print "Free Memory: $free_ram MB\n";
 if ($free_ram < 24)
 {
