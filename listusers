@@ -276,6 +276,10 @@ while (my $line = <$fh>)
 				my $PlainIP = substr($peer, 0, $DotPos);
 				$PlainIP = substr($PlainIP, 1);
 				chop ($PlainIP);
+				if (substr($PlainIP, 0, 7) eq "::ffff:")
+				{
+					$PlainIP = substr($PlainIP, 7);
+				}
 				my $RemotePort = substr($peer, $DotPos + 1);
 				print FILEOUT "<tr><td align = center><span style=\"color: green;\">$PlainIP</span></td><td align = center>$duration</td></tr>\n";
 			}
