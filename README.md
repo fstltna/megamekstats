@@ -13,5 +13,5 @@ Pulls the current stats from a MegaMek server, such as logged-in users.
 
         * * * * * /root/megamekstats/listusers > /dev/null 2>&1
 
-# This will update the file every minute. The html file has a refresh option which will pull in the new one every minute or so.
+# This will update the HTML page every minute. The html file has a refresh option which will pull in the new one every minute or so.
 
