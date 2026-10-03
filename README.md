@@ -1,4 +1,4 @@
-# megamekstats (1.0.0)
+# megamekstats (1.0.1)
 Pulls the current stats from a MegaMek server, such as logged-in users.
 
 ***
@@ -7,7 +7,15 @@ Pulls the current stats from a MegaMek server, such as logged-in users.
 
         ./installdeps
 
-2.   Add this to your crontab:
+2.   Run it the first time to set your preferences
+
+        ./listusers
+
+3.   To change the preferences later run:
+
+        ./listusers prefs
+
+4.   Add this to your crontab:
 
         crontab -e
 
